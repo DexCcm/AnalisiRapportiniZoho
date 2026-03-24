@@ -3,32 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Strumento Analisi Ore Lavorate</title>
+<title>Dashboard KPI Performance Progetto (Stima vs Log)</title>
+
 <link rel="icon" href="data:image/svg+xml,
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
-<text y='0.9em' font-size='90'>📈</text>
+<text y='0.9em' font-size='90'>📊</text>
 </svg>">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* ================= BASE ================= */
+/* ================= BASE (ripreso + esteso) ================= */
+:root{
+  --ink:#0b3c5d;
+  --muted:#355f7a;
+  --panel:rgba(255,255,255,.86);
+  --border:rgba(0,0,0,.10);
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+  --good:#1a9b4f;
+  --bad:#d43b3b;
+  --warn:#b37b00;
+}
+
+*{box-sizing:border-box}
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;
-  color:#0b3c5d;
+  color:var(--ink);
   background-image: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%);
   min-height:100vh;
 }
 .wrapper{width:70%;margin:0 auto;padding:26px 0 44px}
+@media(max-width:1100px){.wrapper{width:92%}}
 
-/* ================= PANELS ================= */
+
 .panel{
-  background:rgba(255,255,255,.82);
+  background:var(--panel);
   border:1px solid rgba(0,0,0,.08);
   border-radius:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  box-shadow:var(--shadow);
   margin-bottom:16px;
 }
 .panelHeader{
@@ -36,9 +50,8 @@ body{
   border-bottom:1px solid rgba(0,0,0,.06);
 }
 .panelHeader h1{margin:0;font-size:20px;font-weight:750}
-.panelHeader p{margin:6px 0 0;font-size:14px;color:#355f7a}
+.panelHeader p{margin:6px 0 0;font-size:14px;color:var(--muted)}
 
-/* ================= TOOLBAR ================= */
 .toolbar{
   display:flex;
   justify-content:space-between;
@@ -49,7 +62,6 @@ body{
 }
 .rightControls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-/* ================= BUTTONS ================= */
 .softBtn{
   border:1px solid rgba(0,0,0,.15);
   background:#fff;
@@ -57,21 +69,19 @@ body{
   border-radius:12px;
   font-size:14px;
   cursor:pointer;
-  color:#0b3c5d;
+  color:var(--ink);
 }
-.softBtn.active{
-  background:#cfeeff;
-  border-color:#7ec8ee;
-  font-weight:600;
-}
-/* === IMPORT BUTTON (BLU – OK) === */
+.softBtn:hover{filter:brightness(.98)}
+.softBtn:active{transform:translateY(1px)}
+
+
 button.learn-more{
   position:relative;
   cursor:pointer;
-  font-weight:900;
-  color:#0b3c5d;
+  font-weight:800;
+  color:var(--ink);
   text-transform:uppercase;
-  padding:1.1em 1.8em;
+  padding:1.05em 1.6em;
   background:#B0E1F8;
   border:2px solid #7bbcd6;
   border-radius:.75em;
@@ -91,161 +101,120 @@ button.learn-more:hover::before{transform:translate3d(0,.5em,-1em)}
 button.learn-more:active{transform:translateY(.7em)}
 button.learn-more:active::before{transform:translate3d(0,0,-1em)}
 
-/* ================= TABS ================= */
-.tabs{display:flex;gap:8px}
-.tabBtn{
-  border:1px solid rgba(0,0,0,.15);
-  background:#fff;
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-}
-.tabBtn.active{background:#d8f0fb}
-
-/* ================= DROPDOWN CHECK ================= */
-.dropdown{position:relative}
-.dropdownBtn{
-  border:1px solid rgba(0,0,0,.15);
-  background:#fff;
-  padding:10px 14px;
-  border-radius:12px;
-  cursor:pointer;
-  min-width:200px;
-}
-.dropdownMenu{
-  position:absolute;
-  top:110%;
-  left:0;
-  background:#fff;
-  border:1px solid rgba(0,0,0,.15);
-  border-radius:12px;
-  box-shadow:0 10px 25px rgba(0,0,0,.15);
-  padding:10px;
-  display:none;
-  z-index:10;
-  max-height:240px;
-  overflow:auto;
-}
-.dropdownMenu label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 4px;
-  cursor:pointer;
-  font-size:14px;
-}
-.dropdownMenu label:hover{
-  background:#eef8fd;
-  border-radius:8px;
-}
-
-/* ================= KPI ================= */
 .kpis{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(6,1fr);
   gap:12px;
   padding:14px 20px 18px;
 }
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
+
 .kpi{
   border:1px solid rgba(0,0,0,.10);
   border-radius:14px;
   background:#fff;
   padding:14px;
 }
-.kpi span{display:block;margin-bottom:10px;font-size:13px;color:#355f7a}
+.kpi span{display:block;margin-bottom:10px;font-size:13px;color:var(--muted)}
 .kpi strong{font-size:22px}
+.kpi small{display:block;margin-top:6px;color:var(--muted);font-size:12px}
+.kpi.good strong{color:var(--good)}
+.kpi.bad strong{color:var(--bad)}
+.kpi.warn strong{color:var(--warn)}
 
-/* ================= CHART ================= */
-.chartWrap{height:260px;padding:12px}
+.grid2{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:12px;
+  padding:12px 12px 16px;
+}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
 
-/* ================= TABLE ================= */
+.card{
+  border:1px solid rgba(0,0,0,.10);
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+.cardHeader{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(0,0,0,.06);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.cardHeader h2{margin:0;font-size:14px}
+.cardBody{height:320px;padding:10px}
+.cardBody.sm{height:320px}
+
+.filters{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.input{
+  border:1px solid rgba(0,0,0,.15);
+  background:#fff;
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:14px;
+  outline:none;
+  min-width:240px;
+}
+.select{
+  border:1px solid rgba(0,0,0,.15);
+  background:#fff;
+  padding:10px 12px;
+  border-radius:12px;
+  font-size:14px;
+  outline:none;
+}
+
 .tableInner{
   border:1px solid rgba(0,0,0,.08);
   border-radius:14px;
   background:#fff;
   overflow:auto;
 }
-table{width:100%;border-collapse:collapse;min-width:900px}
+table{width:100%;border-collapse:collapse;min-width:980px}
 th,td{
   padding:10px 12px;
   border-bottom:1px solid rgba(0,0,0,.08);
   border-right:1px solid rgba(0,0,0,.08);
+  vertical-align:top;
 }
-td.num{text-align:right}
-td.clickable{cursor:pointer;background:#eef8fd}
-tfoot td{
-  font-weight:700;
+th{
+  position:sticky; top:0;
   background:#f5fbfe;
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
 }
-#pivotTable thead th {
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.10);
+  font-size:12px;
+  background:#fff;
 }
-#pivotTable tbody td {
-  font-size: 16px;
-}
-/* === COLONNA TOTALE SEMPRE VISIBILE E SEPARATA === */
-#pivotTable th:last-child,
-#pivotTable td:last-child {
-  position: sticky;
-  right: 0;
-  z-index: 3;
-
-  /* background coprente */
-  background: #f5fbfe;
-
-  /* BORDO SEMPRE VISIBILE */
-  border-left: 3px solid #7ec8ee !important;
-
-  /* separazione visiva costante */
-  box-shadow: -2px 0 0 #7ec8ee;
-}
-
-/* === COLONNA UTENTE SEMPRE VISIBILE === */
-#pivotTable th:first-child,
-#pivotTable td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 3;              /* ⬅ più alto delle celle normali */
-  background: #fff;        /* ⬅ FONDAMENTALE */
-}
-/* Header Utente sopra alle celle */
-#pivotTable thead th:first-child {
-  z-index: 3;
-}
-
-/* Footer (se presente) */
-#pivotTable tfoot td:first-child {
-  z-index: 4;
-}
-/* Header sopra */
-#pivotTable thead th:last-child {
-  z-index: 3;
-}
-
-/* Footer sopra tutto */
-#pivotTable tfoot td:last-child {
-  z-index: 4;
-}
-
-/* Separatore visivo elegante */
-#pivotTable th:last-child,
-#pivotTable td:last-child {
-  border-left: 4px solid rgba(126,200,238,0.6);
-}
-/* ================= DETAILS ================= */
-.detailsBody{display:none;padding:12px}
-.detailsBody.open{display:block}
-
-@media(max-width:1100px){.wrapper{width:92%}}
+.badge.good{color:var(--good); border-color:rgba(26,155,79,.35); background:rgba(26,155,79,.08)}
+.badge.bad{color:var(--bad); border-color:rgba(212,59,59,.35); background:rgba(212,59,59,.08)}
+.badge.neutral{color:var(--muted)}
+tfoot td{font-weight:800;background:#f5fbfe}
+.miniHint{color:var(--muted);font-size:12px;font-weight:800}
+hr.sep{border:none;border-top:1px solid rgba(0,0,0,.08);margin:10px 0}
 </style>
 </head>
 
 <body>
+
+
 <div class="wrapper">
 <!-- DATAEXPERT HEADER -->
 <div class="panel" style="overflow:hidden;background:transparent;border:none;">
@@ -262,134 +231,205 @@ tfoot td{
          style="max-height:56px;width:auto;">
   </div>
 </div>
-<!-- PAGE TITLE -->
+
+
+<!-- TITLE -->
 <div class="panel">
   <div class="panelHeader" style="display:flex;align-items:center;gap:14px;">
-    
-    <!-- ICON -->
-    <div style="
-      width:44px;
-      height:44px;
-      border-radius:12px;
+   
+   <div style="
+      width:52px;height:52px;border-radius:12px;
       background:linear-gradient(135deg,#7ec8ee,#b0e1f8);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-    ">
-      📈
+      display:flex;align-items:center;justify-content:center;font-size:40px;padding-bottom:5px;">
+      🎯
     </div>
-
-    <!-- TITLE -->
     <div>
-      <h1 style="margin:0;font-size:22px;">Rapportini Zoho - Tool di Analisi</h1>
+      <h1 style="margin:0;font-size:30px;">Dashboard KPI Progetti</h1>
+      <p style="margin:6px 0 0;">Analisi delle performance di un dato progetto, confrontando la stima iniziale (Work hours) vs tempo effettivo impiegato (Total Log Hours) • verde = positivo • rosso = negativo</p>
     </div>
-
   </div>
 </div>
-<!-- HEADER -->
+
+<!-- CONTROLS + KPIs -->
 <div class="panel">
   <div class="panelHeader">
-    <h2>Analisi ore lavorate</h2>
-    <h1>Vista per Progetto • Task • Utente</h1>
-	<p>E' possibile importare più rapportini provenienti da utenti diversi</p>
+    <h1>Importazione e analisi</h1>
+    <p>Importa uno o più export .xlsx (anche di progetti diversi). I dati vengono uniti.</p>
   </div>
 
   <div class="toolbar">
-    <button id="btnImport" class="learn-more">Importa Excel</button>
-    <input id="fileInput" type="file" accept=".xlsx,.xml" hidden multiple>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <button id="btnImport" class="learn-more">Importa XLSX</button>
+      <input id="fileInput" type="file" accept=".xlsx" hidden multiple>
+      <button id="btnClear" class="softBtn" title="Svuota dati importati">Svuota dati</button>
+    </div>
 
     <div class="rightControls">
-      <div class="tabs">
-        <div class="tabBtn active" data-view="project">Progetti</div>
-        <div class="tabBtn" data-view="task">Tasks</div>
-				<select id="chartModeSelect" class="softBtn">
-		  <option value="total">Riepilogo Totale</option>
-		  <option value="byUser">Progetti per Utente</option>
+      <div class="filters">
+        <input id="searchTxt" class="input" placeholder="Cerca task (nome)..." />
+		<select id="taskSelect" class="select" title="Seleziona task">
+		<option value="">Seleziona i task</option>
 		</select>
-
-		<select id="chartUnitSelect" class="softBtn">
-		  <option value="hours">Ore</option>
-		  <option value="days">Giorni</option>
-		</select>
-
+        <select id="filterStatus" class="select" title="Filtro stato (se presente nel file)">
+          <option value="">Tutti gli stati</option>
+        </select>
+        <select id="filterOwner" class="select" title="Filtro owner (se presente nel file)">
+          <option value="">Tutti gli owner</option>
+        </select>
+        <select id="topN" class="select" title="Top N overrun nel grafico">
+          <option value="10">Top 10</option>
+          <option value="15">Top 15</option>
+          <option value="20">Top 20</option>
+          <option value="9999">Tutti</option>
+        </select>
+        <button id="btnToggleUnit" class="softBtn" type="button" title="Passa da ore a giornate" aria-pressed="false" style="font-weight:700; min-width:180px;">
+          🕒 Mostra in giornate
+        </button>
       </div>
-
-      <!-- PROJECT FILTER -->
-      <div class="dropdown" id="projectDropdown">
-        <div class="dropdownBtn">Filtra Progetti</div>
-        <div class="dropdownMenu" id="projectMenu"></div>
-      </div>
-
-      <!-- TASK FILTER -->
-      <div class="dropdown" id="taskDropdown" style="display:none">
-        <div class="dropdownBtn">Filtra Tasks</div>
-        <div class="dropdownMenu" id="taskMenu"></div>
-      </div>
-
-      <!-- USER FILTER -->
-      <div class="dropdown" id="userDropdown">
-        <div class="dropdownBtn">Filtra Utenti</div>
-        <div class="dropdownMenu" id="userMenu"></div>
-      </div>
-
-      <button class="softBtn" onclick="location.reload()">Reset</button>
     </div>
   </div>
 
   <div class="kpis">
-    <div class="kpi"><span>Totale ore</span><strong id="kpiHours">—</strong></div>
-    <div class="kpi"><span>Utenti</span><strong id="kpiUsers">—</strong></div>
-    <div class="kpi"><span>Progetti</span><strong id="kpiProjects">—</strong></div>
-    <div class="kpi"><span>Tasks</span><strong id="kpiTasks">—</strong></div>
+    <div class="kpi"><span>Task importati</span><strong id="kpiTasks">—</strong><small id="kpiFiles">—</small></div>
+    <div class="kpi"><span>Ore stimate (tot)</span><strong id="kpiEst">—</strong><small>Somma Work hours</small></div>
+    <div class="kpi"><span>Ore loggate (tot)</span><strong id="kpiLog">—</strong><small>Somma Total Log Hours</small></div>
+    <div class="kpi" id="kpiDiffBox"><span>Differenza (tot)</span><strong id="kpiDiff">—</strong><small>Work − Log</small></div>
+    <div class="kpi warn"><span>Accuracy (Log/Work)</span><strong id="kpiAcc">—</strong><small>Quanto sei vicino alla stima</small></div>
+    <div class="kpi"><span>Task in overrun</span><strong id="kpiOver">—</strong><small id="kpiOverPct">—</small></div>
   </div>
 </div>
 
-<!-- CHART -->
-<div class="panel">
-  <div class="panelHeader"
-     style="display:flex;justify-content:space-between;align-items:center;">
-  <h1 style="font-size:16px">Grafico riepilogativo</h1>
 
-  <div style="display:flex;gap:8px;">
-    <button class="softBtn active"  id="btnChartTotal">
-      Riepilogo Totale
-    </button>
-    <button class="softBtn"  id="btnChartByUser">
-      Progetti per Utente
-    </button>
+<!-- CHARTS -->
+<div class="panel">
+  <div class="panelHeader">
+    <h1>Grafici riepilogativi</h1>
+    <p>Top overrun (rosso) e task sotto stima (verde).</p>
   </div>
-</div>
 
-  <div class="chartWrap"><canvas id="barChart"></canvas></div>
-</div>
-
-<!-- PIVOT -->
-<div class="panel">
-  <div class="panelHeader"><h1 style="font-size:16px">Tabella Pivot</h1></div>
-  <div class="tableInner"><table id="pivotTable"></table></div>
-</div>
-
-<!-- DETAILS -->
-<div class="panel">
-  <div class="panelHeader"><h1 style="font-size:16px">Dettaglio</h1></div>
-  <div id="detailsBody" class="detailsBody">
-    <div class="tableInner">
-      <table>
-        <thead>
-          <tr>
-            <th>Utente</th>
-            <th>Progetto</th>
-            <th>Compito</th>
-            <th class="num">Ore</th>
-          </tr>
-        </thead>
-        <tbody id="detailBody"></tbody>
-      </table>
+  <!-- TOP OVERRUN – FULL WIDTH -->
+  <div class="card" style="margin:12px;">
+    <div class="cardHeader">
+      <h2>Top overrun / residuo per task (Difference)</h2>
+      <div class="miniHint">Ordinati per overrun (più negativo) → residuo</div>
+    </div>
+    <!-- altezza aumentata, nessun cambio CSS -->
+ 
+   <div class="cardBody" style="height:520px;">
+      <canvas id="barDiff"></canvas>
     </div>
   </div>
+
+  <!-- LOWER ROW -->
+  <div class="grid2" style="padding-top:0;">
+    
+    
+   <!-- KPI SUMMARY (LEFT) -->
+<div class="cardBody sm" style="display:flex;flex-direction:column;gap:12px;justify-content:center;">
+
+  <!-- OVERUN -->
+
+   <div class="kpi"  style="padding:14px; margin-top: 3%">
+  
+  <span class="miniHint">Task in Overrun (Surplus di ore)</span>
+
+  <div style="display:flex;align-items:center;gap:18px;margin-top:6px;">
+    
+    <strong id="sumOver"
+            style="font-size:32px;color:var(--bad);min-width:48px;">
+      —
+    </strong>
+
+    <div>
+      <span id="sumOverPct"
+            style="font-size:14px;font-weight:600;color:var(--bad);display:block;">
+        —
+      </span>
+      <span class="miniHint">oltre la stima</span>
+    </div>
+
+  </div>
 </div>
-  <!-- FIRMA -->
+
+  <!-- IN LINEA -->
+
+  
+  <div class="kpi" style="padding:14px;"> 
+  <span class="miniHint">Task in linea (Stima rispettata)</span>
+	<div style="display:flex;align-items:center;gap:18px;margin-top:6px;"> 
+    <strong id="sumZero"  style="font-size:32px;color:var(--muted);min-width:48px;">
+      —
+    </strong>
+
+    <div>
+      <span id="sumZeroPct"
+            style="font-size:14px;font-weight:600;color:var(--muted);display:block;">
+        —
+      </span>
+      <span class="miniHint">stima rispettata</span>
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- IN ANTICIPO -->
+<div class="kpi" style="padding:14px;">
+  
+  <span class="miniHint">Task in anticipo (Risparmio di ore)</span>
+
+  <div style="display:flex;align-items:center;gap:18px;margin-top:6px;">
+    
+    <strong id="sumEarly"
+            style="font-size:32px;color:var(--good);min-width:48px;">
+      —
+    </strong>
+
+    <div>
+      <span id="sumEarlyPct"
+            style="font-size:14px;font-weight:600;color:var(--good);display:block;">
+        —
+      </span>
+      <span class="miniHint">chiusi in anticipo</span>
+    </div>
+
+  </div>
+</div>
+
+
+</div>
+
+
+
+    <!-- DONUT ON THE RIGHT -->
+    <div class="card">
+      <div class="cardHeader">
+        <h2>Distribuzione task</h2>
+        <div class="miniHint">Sotto stima vs Overrun</div>
+      </div>
+      <div class="cardBody sm">
+        <canvas id="donut"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- TABLE -->
+<div class="panel">
+  <div class="panelHeader">
+    <h1>Tabella analitica</h1>
+    <p>Clicca sulle intestazioni per ordinare. Footer con totali.</p>
+  </div>
+
+  <div class="tableInner">
+    <table id="tbl">
+      <!-- filled by JS -->
+    </table>
+  </div>
+</div>
+<!-- FIRMA -->
     <div style="
       width:100%;
       height:44px;
@@ -408,436 +448,500 @@ tfoot td{
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+/* ================== STATE ================== */
+let raw = [];              // normalized rows
+let filesImported = [];    // file names
+let sortKey = "differenceH";
+let sortDir = "asc";       // asc: more negative first (overrun) when key is difference
 
-/* ================= STATE ================= */
-let rawData=[], currentView="project", chart=null;
-let selProjects=[], selTasks=[], selUsers=[];
-let chartMode = "total"; // total | byUser
-let chartUnit = "hours"; // hours | days
+let chartBar = null;
+let chartDonut = null;
 
-const CHART_MIN_HEIGHT = 260;
-const BAR_HEIGHT = 34;
-const CHART_PADDING = 40;
-const BAR_HEIGHT_DENSE = 44; // più leggibile con molti elementi
-const BAR_HEIGHT_PER_USER = 28; // spazio verticale per ogni barra utente
-
-
-/* ================= DOM ================= */
 const el = id => document.getElementById(id);
+let viewAsDays = false;
+const HOURS_PER_DAY = 8;
 
-const btnImport = el("btnImport");
-const fileInput = el("fileInput");
-const chartModeSelect = el("chartModeSelect");
-const chartUnitSelect = el("chartUnitSelect");
-const pivotTable = el("pivotTable");
-const detailsBody = el("detailsBody");
-const detailBody = el("detailBody");
-const barChart = el("barChart");
-
-const projectDropdown = el("projectDropdown");
-const taskDropdown = el("taskDropdown");
-
-const btnChartTotal = document.getElementById("btnChartTotal");
-const btnChartByUser = document.getElementById("btnChartByUser");
-
-btnChartTotal.onclick = () => {
-  chartMode = "total";
-  btnChartTotal.classList.add("active");
-  btnChartByUser.classList.remove("active");
-  renderChart(filtered());
-};
-
-btnChartByUser.onclick = () => {
-  chartMode = "byUser";
-  btnChartByUser.classList.add("active");
-  btnChartTotal.classList.remove("active");
-  renderChart(filtered());
-};
-
-
-/* KPI */
-const kpiHours = el("kpiHours");
-const kpiUsers = el("kpiUsers");
-const kpiProjects = el("kpiProjects");
-const kpiTasks = el("kpiTasks");
-
-/* ================= EVENTS ================= */
-btnImport.onclick = () => fileInput.click();
-
-chartModeSelect.onchange = e => {
-  chartMode = e.target.value;
-  renderChart(filtered());
-};
-
-chartUnitSelect.onchange = e => {
-  chartUnit = e.target.value;
-  renderAll();
-};
-
-/* ================= DROPDOWN ================= */
-document.addEventListener("click", e => {
-  document.querySelectorAll(".dropdownMenu").forEach(m => {
-    if (!m.parentElement.contains(e.target)) m.style.display = "none";
-  });
-});
-
-document.querySelectorAll(".dropdownBtn").forEach(b => {
-  b.onclick = e => {
-    const menu = b.nextElementSibling;
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-    e.stopPropagation();
-  };
-});
-
-/* ================= UNIT ================= */
-function toUnit(v){
-  return chartUnit === "days" ? v / 8 : v;
+/* ================== HELPERS ================== */
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
 }
-function formatUnit(v){
-  return toUnit(v).toFixed(2);
+function fmtH(h){
+  if (!isFinite(h)) return "—";
+  const sign = h < 0 ? "-" : "";
+  const abs = Math.abs(h);
+  const hh = Math.floor(abs);
+  const mm = Math.round((abs - hh) * 60);
+  const mm2 = String(mm).padStart(2,"0");
+  return `${sign}${hh}:${mm2}`;
+}
+function toDisplayUnit(h){
+  return viewAsDays ? (h / HOURS_PER_DAY) : h;
+}
+function fmtValue(h){
+  if (!isFinite(h)) return "—";
+  return viewAsDays ? `${toDisplayUnit(h).toFixed(2)} g` : fmtH(h);
+}
+function updateUnitToggleUI(){
+  const btn = el("btnToggleUnit");
+  if(!btn) return;
+  btn.textContent = viewAsDays ? "📅 Mostra in ore" : "🕒 Mostra in giornate";
+  btn.setAttribute("aria-pressed", viewAsDays ? "true" : "false");
+  btn.style.background = viewAsDays ? "linear-gradient(135deg,#7ec8ee,#b0e1f8)" : "#fff";
+  btn.style.borderColor = viewAsDays ? "#7bbcd6" : "rgba(0,0,0,.15)";
+}
+function fmt2(n){
+  if(!isFinite(n)) return "—";
+  return n.toFixed(2);
 }
 
-/* ================= IMPORT ================= */
-function findHeaderIndex(headers, possibleNames){
-  return headers.findIndex(h =>
-    possibleNames.includes(h?.toString().trim())
-  );
+/* Parse time like:
+   - "80:00"
+   - "4:30"
+   - "00:00"
+   - "(+) 77:00"
+   - "(-) 02:00"
+   - numbers like 3.5 (treated as hours)
+*/
+function parseHours(v){
+  if(v === null || v === undefined || v === "") return 0;
+  if(typeof v === "number") return isFinite(v) ? v : 0;
+
+  let s = String(v).trim();
+  if(!s || s === "-") return 0;
+
+  // handle "(+) 77:00" / "(-) 02:00"
+  let sign = 1;
+  const mSign = s.match(/^\(\s*([+-])\s*\)\s*(.+)$/);
+  if(mSign){
+    sign = (mSign[1] === "-") ? -1 : 1;
+    s = mSign[2].trim();
+  }
+
+  // handle "H:MM"
+  const m = s.match(/^(\d+)\s*:\s*(\d{1,2})$/);
+  if(m){
+    const h = parseInt(m[1],10);
+    const mm = parseInt(m[2],10);
+    return sign * (h + (mm/60));
+  }
+
+  // handle decimal with comma
+  s = s.replace(",",".");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : sign * n;
+}
+function buildTaskSelect(){
+  const sel = el("taskSelect");
+  if(!sel) return;
+
+  const keep = sel.value;
+
+  const tasks = [...new Set(raw.map(r => r.taskName))]
+    .sort((a,b)=>a.localeCompare(b));
+
+  sel.innerHTML =
+    `<option value="">Tutti i task</option>` +
+    tasks.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+
+  if(tasks.includes(keep)) sel.value = keep;
 }
 
-fileInput.onchange = e => {
-  rawData = [];
-  [...e.target.files].forEach(f => {
-    const r = new FileReader();
-    const xml = f.name.endsWith(".xml");
-    r.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: xml ? "string" : "array" });
-      const rows = XLSX.utils.sheet_to_json(
-        wb.Sheets[wb.SheetNames[0]],
-        { header: 1 }
-      );
-      const h = rows[0];
-      const idx = {
-        u: h.indexOf("Utente"),
-        p: h.indexOf("Project Name"),
-        t: findHeaderIndex(h, [
-          "Compito/Generale/Issue",
-          "Compito/Generale/Problema"
-        ]),
-        o: h.indexOf("Hours(For Calculation)")
-      };
-
-      rows.slice(1).forEach(r => {
-        if (r.some(c => String(c).includes("Totale ore di log"))) return;
-        const ore = parseFloat(r[idx.o]);
-        if (!isNaN(ore))
-          rawData.push({
-            utente: r[idx.u],
-            progetto: r[idx.p],
-            compito: r[idx.t],
-            ore
-          });
-      });
-
-      initUI();
-      renderAll();
-    };
-    xml ? r.readAsText(f) : r.readAsArrayBuffer(f);
-  });
-};
-
-/* ================= FILTER UI ================= */
-function initUI(){
-  buildMenu("projectMenu",[...new Set(rawData.map(r=>r.progetto))],selProjects);
-  buildMenu("taskMenu",[...new Set(rawData.map(r=>r.compito))],selTasks);
-  buildMenu("userMenu",[...new Set(rawData.map(r=>r.utente))],selUsers);
+// Find header indexes case-insensitive; accept small variations
+function headerIndex(headers, candidates){
+  const norm = h => String(h ?? "").trim().toLowerCase();
+  const hs = headers.map(norm);
+  for(const c of candidates){
+    const i = hs.indexOf(c.toLowerCase());
+    if(i !== -1) return i;
+  }
+  return -1;
 }
 
-function buildMenu(id, values, store){
-  const menu = el(id);
-  menu.innerHTML = "";
-  values.forEach(v => {
-    const l = document.createElement("label");
-    l.innerHTML = `<input type="checkbox"> ${v}`;
-    l.querySelector("input").onchange = e => {
-      if (e.target.checked) store.push(v);
-      else store.splice(store.indexOf(v), 1);
-      renderAll();
-    };
-    menu.appendChild(l);
-  });
-}
-
-/* ================= TABS ================= */
-document.querySelectorAll(".tabBtn").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".tabBtn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    currentView = b.dataset.view;
-    projectDropdown.style.display = currentView === "project" ? "block" : "none";
-    taskDropdown.style.display = currentView === "task" ? "block" : "none";
-    renderAll();
-  };
-});
-
-/* ================= FILTER ================= */
-function filtered(){
-  return rawData.filter(r => {
-    if (selUsers.length && !selUsers.includes(r.utente)) return false;
-    if (currentView === "project" && selProjects.length && !selProjects.includes(r.progetto)) return false;
-    if (currentView === "task" && selTasks.length && !selTasks.includes(r.compito)) return false;
+function getFiltered(){
+  const q = el("searchTxt").value.trim().toLowerCase();
+  const st = el("filterStatus").value;
+  const ow = el("filterOwner").value;
+  const tk = el("taskSelect")?.value || "";
+  
+  return raw.filter(r=>{
+    if(tk && r.taskName !== tk) return false;
+    if(q && !String(r.taskName).toLowerCase().includes(q)) return false;
+    if(st && String(r.status || "") !== st) return false;
+    if(ow && String(r.owner || "") !== ow) return false;
     return true;
   });
 }
 
-/* ================= RENDER ================= */
-function renderAll(){
-  const d = filtered();
-  kpiHours.textContent = formatUnit(d.reduce((s,r)=>s+r.ore,0));
-  kpiUsers.textContent = new Set(d.map(r=>r.utente)).size;
-  kpiProjects.textContent = new Set(d.map(r=>r.progetto)).size;
-  kpiTasks.textContent = new Set(d.map(r=>r.compito)).size;
-  renderChart(d);
-  renderPivot(d);
+function setKPI(){
+  const d = getFiltered();
+  const tasks = d.length;
+
+  const est = d.reduce((s,r)=>s+r.workH,0);
+  const log = d.reduce((s,r)=>s+r.logH,0);
+  const diff = d.reduce((s,r)=>s+r.differenceH,0);
+
+  const over = d.filter(r=>r.differenceH < 0).length;
+  const under = d.filter(r=>r.differenceH >= 0).length;
+
+  el("kpiTasks").textContent = tasks.toString();
+  el("kpiFiles").textContent = filesImported.length ? (`File: ${filesImported.length} • ${filesImported.join(" • ")}`) : "Nessun file importato";
+
+  el("kpiEst").textContent = fmtValue(est);
+  el("kpiLog").textContent = fmtValue(log);
+
+  el("kpiDiff").textContent = fmtValue(diff);
+
+  const box = el("kpiDiffBox");
+  box.classList.remove("good","bad","warn");
+  if(diff > 0) box.classList.add("good");
+  else if(diff < 0) box.classList.add("bad");
+  else box.classList.add("warn");
+
+  // Accuracy: log/est (ignore est=0)
+  let acc = NaN;
+  if(est > 0) acc = (log/est) * 100;
+  el("kpiAcc").textContent = isFinite(acc) ? `${acc.toFixed(1)}%` : "—";
+
+  el("kpiOver").textContent = over.toString();
+  el("kpiOverPct").textContent = tasks ? (`${(over/tasks*100).toFixed(1)}% overrun • ${under} ok`) : "—";
+// ===== RIEPILOGO TASK (BOX A SINISTRA DEL DONUT) =====
+const zero  = d.filter(r => r.differenceH === 0).length;
+const early = d.filter(r => r.differenceH > 0).length;
+
+const pct = (v) => tasks ? `${(v / tasks * 100).toFixed(1)}% del totale` : "—";
+
+if(el("sumOver")){
+  el("sumOver").textContent = over;
+  el("sumOverPct").textContent = pct(over) + " • oltre la stima";
 }
 
-/* ================= CHART ================= */
-function buildProjectByUserDatasets(data){
-  // utenti
-  const users = [...new Set(data.map(r => r.utente))];
+if(el("sumZero")){
+  el("sumZero").textContent = zero;
+  el("sumZeroPct").textContent = pct(zero) + " • stima rispettata";
+}
 
-  // totale per progetto (serve per ordinamento)
-  const projectTotals = {};
-  data.forEach(r => {
-    projectTotals[r.progetto] =
-      (projectTotals[r.progetto] || 0) + toUnit(r.ore);
+if(el("sumEarly")){
+  el("sumEarly").textContent = early;
+  el("sumEarlyPct").textContent = pct(early) + " • chiusi in anticipo";
+}
+
+
+}
+
+function renderCharts(){
+  const d = getFiltered();
+  const topN = parseInt(el("topN").value,10) || 10;
+
+  // Sort by difference asc (most negative first)
+  const sorted = [...d].sort((a,b)=>a.differenceH - b.differenceH);
+  const sliced = sorted.slice(0, Math.min(topN, sorted.length));
+
+  const labels = sliced.map(r => {
+    const name = String(r.taskName || "");
+    return name.length > 40 ? (name.slice(0,40) + "…") : name;
   });
 
-  // progetti ordinati per totale decrescente
-  const projects = Object.entries(projectTotals)
-    .sort((a,b)=>b[1]-a[1])
-    .map(e=>e[0]);
+  const data = sliced.map(r => toDisplayUnit(r.differenceH));
 
-  const palette = [
-  "#7EC8EE", // blu acciaio
-  "#597DD9", // azzurro
-  "#59CED9", // teal soft
-  "#9CD9CF", // blu polvere
-  "#8DA0CB", // lavanda freddo
-  "#B07AA1", // lilla smorzato
-  "#A0CBE8", // azzurro chiaro
-  "#4E6865", // verde acqua
-  "#C5EDE9", // blu ghiaccio
-  "#9AD0C2"  // verde pastello
-  ];
+  const colors = sliced.map(r => (r.differenceH >= 0 ? "rgba(26,155,79,.65)" : "rgba(212,59,59,.65)"));
+  const borders = sliced.map(r => (r.differenceH >= 0 ? "rgba(26,155,79,1)" : "rgba(212,59,59,1)"));
 
-  // datasets ALLINEATI all’array `projects`
-  const datasets = users.map((u,i)=>({
-    label: u,
-    backgroundColor: palette[i % palette.length],
-    borderRadius: 6,
-    data: projects.map(p => {
-      return toUnit(
-        data
-          .filter(r => r.utente === u && r.progetto === p)
-          .reduce((s,r)=>s+r.ore,0)
-      );
-    })
-  }));
-
-  return { projects, datasets };
-}
-
-
-function renderChart(d){
-  if(chart) chart.destroy();
-
-  const ctx = barChart.getContext("2d");
-  const unitLabel = chartUnit === "days" ? "gg" : "ore";
-  const chartWrap = document.querySelector(".chartWrap");
-
-  /* ===== MODALITÀ: PROGETTI PER UTENTE ===== */
-  if(chartMode === "byUser"){
-    const { projects, datasets } = buildProjectByUserDatasets(d);
-
-    // 👉 ALTEZZA DINAMICA
-
-const userCount = datasets.length;
-
-// spazio verticale per ogni progetto = utenti × spazio per barra
-const perProjectHeight = userCount * BAR_HEIGHT_PER_USER;
-
-const chartHeight = Math.max(
-  CHART_MIN_HEIGHT,
-  projects.length * perProjectHeight + CHART_PADDING
-);
-    chartWrap.style.height = chartHeight + "px";
-
-    chart = new Chart(ctx,{
-      type: "bar",
-      data: { labels: projects, datasets },
-options: {
-  indexAxis: "y",
-  responsive: true,
-  maintainAspectRatio: false,
-
-  datasets: {
-    bar: {
-      barThickness: 23,
-      maxBarThickness: 30
-    }
-  },
-
-plugins: {
-  legend: {
-    position: "bottom",
-    labels: {
-      font: {
-        size: 16,      // ⬅ cambia questo valore
-        weight: "600"
-      },
-      padding: 18     // ⬅ spazio tra le voci (consigliato)
-    }
-  }
-},
-  scales: {
-    x: { beginAtZero: true },
-    y: {
-      grid: { display: false },
-      ticks: {
-        font: {
-          size: 13,
-          weight: "600"
-        }
-      }
-    }
-  }
-}
-    });
-    return;
-  }
-
-  /* ===== MODALITÀ: RIEPILOGO TOTALE ===== */
-  const key = currentView === "task" ? "compito" : "progetto";
-  const map = {};
-  d.forEach(r => {
-    map[r[key]] = (map[r[key]] || 0) + toUnit(r.ore);
-  });
-
-  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  const labels = sorted.map(e=>e[0]);
-  const values = sorted.map(e=>e[1]);
-
-  // 👉 ALTEZZA DINAMICA
-  const barSize = labels.length > 10
-    ? BAR_HEIGHT_DENSE
-    : BAR_HEIGHT;
-
-  const chartHeight = Math.max(
-    CHART_MIN_HEIGHT,
-    labels.length * barSize + CHART_PADDING
-  );
-
-  chartWrap.style.height = chartHeight + "px";
-
-  const grad = ctx.createLinearGradient(0,0,400,0);
-  grad.addColorStop(0,"#f8cfd0");
-  grad.addColorStop(1,"#7ec8ee");
-
-  chart = new Chart(ctx,{
-    type: "bar",
-    data: {
+  // Bar
+  if(chartBar) chartBar.destroy();
+  chartBar = new Chart(el("barDiff").getContext("2d"),{
+    type:"bar",
+    data:{
       labels,
-      datasets: [{
-        data: values,
-        backgroundColor: grad,
-        borderRadius: 8,
-        borderSkipped: false,   // 👉 barre arrotondate bene
-        barThickness: 32
-		
+      datasets:[{
+        label: viewAsDays ? "Difference (Work − Log) [giornate]" : "Difference (Work − Log) [ore]",
+        data,
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 1,
+        borderRadius: 10
       }]
     },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }, // 👉 niente legenda qui
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.raw.toFixed(2)} ${unitLabel}`
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=>{
+              const v = ctx.parsed.y;
+              return ` ${viewAsDays ? `${Number(v).toFixed(2)} g` : `${fmtH(v)} (ore)`}`;
+            }
           }
         }
       },
-	  /*
-      scales: {
-        x: { beginAtZero: true },
-        y: { grid: { display: false } }
-      }*/
-	  
-		 scales: {
-	  x: { beginAtZero: true },
-	  y: {
-		grid: { display: false },
-		ticks: {
-		  font: {
-			size: 13,
-			weight: "600"
-		  }
-		}
-	  }
-	}
-
+      scales:{
+        y:{
+          ticks:{
+            callback:(v)=> viewAsDays ? `${Number(v).toFixed(2)} g` : fmtH(Number(v))
+          }
+        }
+      }
     }
   });
-  
+
+  // Donut distribution
+  const under = d.filter(r=>r.differenceH >= 0).length;
+  const over = d.filter(r=>r.differenceH < 0).length;
+
+  if(chartDonut) chartDonut.destroy();
+  chartDonut = new Chart(el("donut").getContext("2d"),{
+    type:"doughnut",
+    data:{
+      labels:["Sotto stima / Residuo (verde)","Overrun (rosso)"],
+      datasets:[{
+        data:[under, over],
+        backgroundColor:["rgba(26,155,79,.65)","rgba(212,59,59,.65)"],
+        borderColor:["rgba(26,155,79,1)","rgba(212,59,59,1)"],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{position:"bottom"}}
+    }
+  });
 }
 
+function renderTable(){
+  const d = getFiltered();
 
-/* ================= PIVOT ================= */
-function renderPivot(d){
-  const agg={};
-  d.forEach(r=>{
-    agg[r.utente]??={};
-    agg[r.utente][currentView==="task"?r.compito:r.progetto]=(agg[r.utente][currentView==="task"?r.compito:r.progetto]||0)+r.ore;
+  // sorting
+  const dir = (sortDir === "asc") ? 1 : -1;
+  const sorted = [...d].sort((a,b)=>{
+    const va = a[sortKey];
+    const vb = b[sortKey];
+    if(typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
+    return String(va ?? "").localeCompare(String(vb ?? "")) * dir;
   });
 
-  const rows=Object.keys(agg);
-  const cols=[...new Set(rows.flatMap(r=>Object.keys(agg[r])))];
+  const hasOwner = sorted.some(r=>r.owner);
+  const hasStatus = sorted.some(r=>r.status);
 
-let html = '<thead><tr><th>Utente</th>';
-cols.forEach(c => html += `<th title="${c}">${c}</th>`);
-html += '<th>Totale</th></tr></thead><tbody>';
+  const th = (label,key) => {
+    const arrow = (sortKey === key) ? (sortDir==="asc" ? " ▲" : " ▼") : "";
+    return `<th data-k="${key}">${esc(label)}${arrow}</th>`;
+  };
 
-  rows.forEach(r=>{
-    let t=0; html+=`<tr><td>${r}</td>`;
-    cols.forEach(c=>{
-      const v=agg[r][c]||0; t+=v;
-      html+=`<td class="num clickable" onclick="openDetails('${r}','${c}')">${v?formatUnit(v):""}</td>`;
-    });
-    html+=`<td class="num"><b>${formatUnit(t)}</b></td></tr>`;
+  let thead = `<thead><tr>
+    ${th("Task Name","taskName")}
+    ${hasOwner ? th("Owner","owner") : ""}
+    ${hasStatus ? th("Status","status") : ""}
+    ${th("Work hours (stima)","workH")}
+    ${th("Total Log Hours (log)","logH")}
+    ${th("Difference (Work − Log)","differenceH")}
+    ${th("Δ% (Log vs Work)","deltaPct")}
+    ${th("KPI","kpiTag")}
+  </tr></thead>`;
+
+  let totWork = 0, totLog = 0, totDiff = 0;
+
+  let tbody = "<tbody>";
+  for(const r of sorted){
+    totWork += r.workH;
+    totLog += r.logH;
+    totDiff += r.differenceH;
+
+    const pct = r.deltaPct; // positive => logged more than estimated (%), negative => logged less
+    const pctTxt = isFinite(pct) ? `${pct.toFixed(1)}%` : "—";
+
+    const badge = (r.differenceH < 0)
+      ? `<span class="badge bad">● Overrun</span>`
+      : `<span class="badge good">● OK</span>`;
+
+    tbody += `<tr>
+      <td title="${esc(r.taskName)}">${esc(r.taskName)}</td>
+      ${hasOwner ? `<td>${esc(r.owner || "")}</td>` : ""}
+      ${hasStatus ? `<td>${esc(r.status || "")}</td>` : ""}
+      <td class="num">${fmtValue(r.workH)}</td>
+      <td class="num">${fmtValue(r.logH)}</td>
+      <td class="num" style="font-weight:800;color:${r.differenceH>=0?'var(--good)':'var(--bad)'}">${fmtValue(r.differenceH)}</td>
+      <td class="num" style="color:${(isFinite(pct)&&pct>0)?'var(--bad)':(isFinite(pct)&&pct<0)?'var(--good)':'var(--muted)'}">${pctTxt}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }
+  tbody += "</tbody>";
+
+  const tfoot = `<tfoot><tr>
+    <td colspan="${1 + (hasOwner?1:0) + (hasStatus?1:0)}">Totale</td>
+    <td class="num">${fmtValue(totWork)}</td>
+    <td class="num">${fmtValue(totLog)}</td>
+    <td class="num" style="font-weight:900;color:${totDiff>=0?'var(--good)':'var(--bad)'}">${fmtValue(totDiff)}</td>
+    <td class="num"></td>
+    <td></td>
+  </tr></tfoot>`;
+
+  el("tbl").innerHTML = thead + tbody + tfoot;
+
+  // header sort handlers
+  el("tbl").querySelectorAll("th[data-k]").forEach(thEl=>{
+    thEl.onclick = ()=>{
+      const k = thEl.getAttribute("data-k");
+      if(sortKey === k) sortDir = (sortDir==="asc") ? "desc" : "asc";
+      else { sortKey = k; sortDir = (k === "differenceH") ? "asc" : "asc"; }
+      refresh();
+    };
   });
-
-  html+='</tbody>';
-  pivotTable.innerHTML=html;
 }
 
-/* ================= DETAILS ================= */
-window.openDetails=(u,val)=>{
-  const key=currentView==="task"?"compito":"progetto";
-  const d=filtered().filter(r=>r.utente===u && r[key]===val);
-  detailsBody.classList.add("open");
-  detailBody.innerHTML=d.map(r=>`
-    <tr>
-      <td>${r.utente}</td>
-      <td>${r.progetto}</td>
-      <td>${r.compito}</td>
-      <td class="num">${formatUnit(r.ore)}</td>
-    </tr>
-  `).join("");
+function buildFilterOptions(){
+  const statuses = [...new Set(raw.map(r=>r.status).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+  const owners   = [...new Set(raw.map(r=>r.owner).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)));
+
+  const stSel = el("filterStatus");
+  const owSel = el("filterOwner");
+
+  const keepSt = stSel.value;
+  const keepOw = owSel.value;
+
+  stSel.innerHTML = `<option value="">Tutti gli stati</option>` + statuses.map(s=>`<option>${esc(s)}</option>`).join("");
+  owSel.innerHTML = `<option value="">Tutti gli owner</option>` + owners.map(s=>`<option>${esc(s)}</option>`).join("");
+
+  if(statuses.includes(keepSt)) stSel.value = keepSt;
+  if(owners.includes(keepOw)) owSel.value = keepOw;
+}
+
+function refresh(){
+  updateUnitToggleUI();
+  setKPI();
+  renderCharts();
+  renderTable();
+}
+
+/* ================== IMPORT ================== */
+el("btnImport").onclick = ()=> el("fileInput").click();
+
+el("btnClear").onclick = ()=>{
+  raw = [];
+  filesImported = [];
+  sortKey = "differenceH";
+  sortDir = "asc";
+  el("searchTxt").value = "";
+  el("filterStatus").value = "";
+  el("filterOwner").value = "";
+  viewAsDays = false;
+  refresh();
 };
 
+el("fileInput").onchange = async (e)=>{
+  const files = [...e.target.files];
+  if(!files.length) return;
+
+  for(const f of files){
+    const buf = await f.arrayBuffer();
+    const wb = XLSX.read(buf, {type:"array"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
+
+    if(!rows.length) continue;
+    const headers = rows[0] || [];
+
+    // Required (case-insensitive + variants)
+    const iTask = headerIndex(headers, ["task name","task"]);
+    const iWork = headerIndex(headers, ["work hours","work hours ","work hours  ","work hours\t","work hours\r","work hours\n","work hours (stima)","work hours(stima)","work hours estimate","work hours estimate (h)","work hours (h)","work hours(h)","work hours","work hours","work hours", "work hours", "work hours", "work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours", "work hours","work hours", "work hours", "work hours","work hours", "work hours","work hours", "work hours", "work hours","work hours", "work hours", "work hours", "work hours", "work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours", "work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours","work hours", "work hours","work hours","work hours","work hours","work hours","work hours"]);
+    // NOTE: in molti export è "Work hours" esatto (come nel tuo esempio).
+    const iLog  = headerIndex(headers, ["total log hours","total log hour","log hours","total logged hours"]);
+    const iDiff = headerIndex(headers, ["difference","diff","work-log","work - log"]);
+
+    // Optional
+    const iOwner = headerIndex(headers, ["owner","assignee"]);
+    const iStatus = headerIndex(headers, ["custom status","status"]);
+
+    if(iTask === -1 || iWork === -1 || iLog === -1){
+      alert(`File "${f.name}": colonne richieste non trovate.\nRichieste: Task Name, Work hours, Total Log Hours.\nControlla l'header della prima riga.`);
+      continue;
+    }
+
+    for(const r of rows.slice(1)){
+      const taskName = r[iTask];
+      if(taskName === null || taskName === undefined || String(taskName).trim()==="") continue;
+
+      const workH = parseHours(r[iWork]);
+      const logH  = parseHours(r[iLog]);
+
+      let differenceH = 0;
+      if(iDiff !== -1 && r[iDiff] !== undefined && r[iDiff] !== null && String(r[iDiff]).trim()!==""){
+        differenceH = parseHours(r[iDiff]); // gestisce "(+) 77:00" / "(-) 02:00"
+      }else{
+        differenceH = workH - logH;
+      }
+
+      // deltaPct: positive => logged more than work (bad), negative => logged less (good)
+      let deltaPct = NaN;
+      if(workH > 0) deltaPct = ((logH - workH) / workH) * 100;
+
+const key = String(taskName).trim();
+
+// cerca se esiste già
+const existing = raw.find(t => t.taskName === key);
+
+if(existing){
+  // Work hours: prendiamo il valore massimo (stima unica)
+  existing.workH = Math.max(existing.workH, workH);
+
+  // Log: si somma
+  existing.logH += logH;
+
+  // Ricalcolo
+  existing.differenceH = existing.workH - existing.logH;
+
+  existing.deltaPct = existing.workH > 0
+    ? ((existing.logH - existing.workH) / existing.workH) * 100
+    : NaN;
+
+  existing.kpiTag = existing.differenceH < 0 ? "Overrun" : "OK";
+}else{
+  raw.push({
+    file: f.name,
+    taskName: key,
+    owner: iOwner !== -1 ? (r[iOwner] ?? "") : "",
+    status: iStatus !== -1 ? (r[iStatus] ?? "") : "",
+    workH,
+    logH,
+    differenceH,
+    deltaPct,
+    kpiTag: (differenceH < 0) ? "Overrun" : "OK"
+  });
+}
+
+    }
+
+    if(!filesImported.includes(f.name)) filesImported.push(f.name);
+  }
+
+  // rebuild filter dropdowns after import
+  buildFilterOptions();
+  buildTaskSelect();
+  refresh();
+
+  // reset input to allow re-import same file
+  el("fileInput").value = "";
+};
+
+
+el("btnToggleUnit").addEventListener("click", ()=>{
+  viewAsDays = !viewAsDays;
+  refresh();
 });
+
+/* ================== UI EVENTS ================== */
+["searchTxt","taskSelect","filterStatus","filterOwner","topN"].forEach(id=>{
+  el(id).addEventListener("input", refresh);
+  el(id).addEventListener("change", refresh);
+});
+
+/* ================== INITIAL RENDER ================== */
+refresh();
+
+
 </script>
 
 </body>
